@@ -938,7 +938,7 @@ def format_file_in_place(
     header = b""
     with open(src, "rb") as buf:
         if mode.skip_source_first_line:
-            header = buf.readline()
+            header = buf.readline(5_000_000)
         src_contents, encoding, newline = decode_bytes(buf.read())
     try:
         dst_contents = format_file_contents(
