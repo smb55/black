@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from subprocess import PIPE, STDOUT, run
 from typing import Union
+from security import safe_command
 
 ACTION_PATH = Path(os.environ["GITHUB_ACTION_PATH"])
 ENV_PATH = ACTION_PATH / ".black-env"
@@ -114,7 +115,7 @@ def find_black_version_in_array(array: object) -> Union[str, None]:
     return None
 
 
-run([sys.executable, "-m", "venv", str(ENV_PATH)], check=True)
+safe_command.run(run, [sys.executable, "-m", "venv", str(ENV_PATH)], check=True)
 
 version_specifier = determine_version_specifier()
 if JUPYTER:
@@ -147,8 +148,7 @@ else:
         # the action's commit does not match any tag, install from the local git repo
         req = f".{extra_deps}"
 print(f"Installing {req}...", flush=True)
-pip_proc = run(
-    [str(ENV_BIN / "python"), "-m", "pip", "install", req],
+pip_proc = safe_command.run(run, [str(ENV_BIN / "python"), "-m", "pip", "install", req],
     stdout=PIPE,
     stderr=STDOUT,
     encoding="utf-8",
@@ -163,15 +163,13 @@ if pip_proc.returncode:
 base_cmd = [str(ENV_BIN / "black")]
 if BLACK_ARGS:
     # TODO: remove after a while since this is deprecated in favour of SRC + OPTIONS.
-    proc = run(
-        [*base_cmd, *shlex.split(BLACK_ARGS)],
+    proc = safe_command.run(run, [*base_cmd, *shlex.split(BLACK_ARGS)],
         stdout=PIPE,
         stderr=STDOUT,
         encoding="utf-8",
     )
 else:
-    proc = run(
-        [*base_cmd, *shlex.split(OPTIONS), *shlex.split(SRC)],
+    proc = safe_command.run(run, [*base_cmd, *shlex.split(OPTIONS), *shlex.split(SRC)],
         stdout=PIPE,
         stderr=STDOUT,
         encoding="utf-8",

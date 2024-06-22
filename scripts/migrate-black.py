@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 from subprocess import PIPE, Popen, check_output, run
+from security import safe_command
 
 
 def git(*args: str) -> str:
@@ -55,8 +56,7 @@ def blackify(base_branch: str, black_command: str, logger: logging.Logger) -> in
             ],
             stdout=PIPE,
         )
-        git_apply = Popen(
-            [
+        git_apply = safe_command.run(Popen, [
                 "git",
                 "apply",
             ]

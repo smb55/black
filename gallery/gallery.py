@@ -12,6 +12,7 @@ from functools import lru_cache, partial
 from pathlib import Path
 from typing import Generator, List, NamedTuple, Optional, Tuple, Union, cast
 from urllib.request import urlopen, urlretrieve
+from security import safe_command
 
 PYPI_INSTANCE = "https://pypi.org/pypi"
 PYPI_TOP_PACKAGES = (
@@ -147,7 +148,7 @@ def git_switch_branch(
     args.append(branch)
     if from_branch:
         args.append(from_branch)
-    subprocess.run(args, cwd=repo)
+    safe_command.run(subprocess.run, args, cwd=repo)
 
 
 def init_repos(options: Namespace) -> Tuple[Path, ...]:
@@ -189,7 +190,7 @@ def black_runner(version: str, black_repo: Path) -> Path:
     venv.create(directory.name, with_pip=True)
 
     python = Path(directory.name) / "bin" / "python"
-    subprocess.run([python, "-m", "pip", "install", "-e", black_repo])
+    safe_command.run(subprocess.run, [python, "-m", "pip", "install", "-e", black_repo])
 
     atexit.register(directory.cleanup)
     return python
@@ -214,7 +215,7 @@ def format_repo_with_version(
     if black_version.config:
         format_cmd.extend(["--config", input_directory / black_version.config])
 
-    subprocess.run(format_cmd, cwd=repo, check=False)  # ensure the process
+    safe_command.run(subprocess.run, format_cmd, cwd=repo, check=False)  # ensure the process
     # continuess to run even it can't format some files. Reporting those
     # should be enough
     git_add_and_commit(f"Format with black:{black_version.version}", repo=repo)
